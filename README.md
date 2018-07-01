@@ -4,10 +4,10 @@
 ##### License: MIT
 
 Calculates weights of base funds (assets) in portfolio(s). Supports graphs
-when base fund is included in root fund through through complex path. Detects
-loops in data to prevent infinite looping or incorrect calculations.
+when base fund is included in root fund through complex path. Detects
+loops in data to prevent infinite loops or incorrect calculations.
 
-Expects CSV file for input of the following format:
+Expects CSV file on input with the following format:
 
     A,B,1000
     A,C,2000
@@ -29,7 +29,7 @@ Optional 4th column can be used to include end market values of funds. Example:
     C,H,1000,1000
 
 Returns csv data representing weights of each base fund in each root fund found. If end
-market values are provided, 4th column will contain weighted returns. Example or return data:
+market values are provided, 4th column will contain weighted returns. Example of program return:
 
     A,D,0.167,2.222
     A,E,0.083,1.333
