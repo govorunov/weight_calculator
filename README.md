@@ -17,7 +17,8 @@ Expects CSV file for input of the following format:
     C,G,1000
     C,H,1000
 
-###Usage:
+### Usage:
+
     weight_calculator.py [-h] [-v] data_file
     
     positional arguments:
