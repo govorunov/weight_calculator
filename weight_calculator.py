@@ -185,7 +185,7 @@ def main(args, loglevel):
                 # Calculating returns weights in root fund
                 total_returns, returns_weights = calculate_weights(returns, node)
                 # Calculating weighted returns
-                weighted_returns = {key:(total_returns * val) for (key, val) in returns_weights.items()}
+                weighted_returns = {key: (total_returns * val * weights[key]) for (key, val) in returns_weights.items()}
 
                 print_results(node, weights, value, total_returns, weighted_returns)
             else:
