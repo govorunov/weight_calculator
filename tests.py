@@ -101,6 +101,7 @@ class TestCalculateWeightsFunctions(unittest.TestCase):
         self.assertEqual(value, 3000)
         self.assertSetEqual(set(weights.keys()), {'D','E','F','G','H'})
         test_list = [round(float(elem), 3) for elem in weights.values()]
+        self.assertAlmostEqual(1, sum(weights.values()))
         self.assertListEqual(test_list, [0.167, 0.083, 0.083, 0.333, 0.333])
 
     def test_complex_path(self):
@@ -148,10 +149,10 @@ class TestCalculateWeightsFunctions(unittest.TestCase):
         reader = csv.reader(data.splitlines(), skipinitialspace=True)
         returns, roots = read_data_from_list(reader)
         total, weights = calculate_weights(returns, "A", set())
-        self.assertEqual(total, 3)
+        self.assertEqual(int(total), 3)
         self.assertSetEqual(set(weights.keys()), {'D','E','F','G','H'})
-        test_list = [round(float(elem), 3) for elem in weights.values()]
-        self.assertListEqual(test_list, [1.667,1.000,0.333,-2.000,0.000])
+        test_list = [round(float(total * elem), 3) for elem in weights.values()]
+        self.assertListEqual(test_list, [5.000, 3.000, 1.000, -6.000, 0.000])
 
 
 if __name__ == '__main__':
