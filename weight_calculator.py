@@ -83,7 +83,7 @@ def calculate_weights(funds: dict, fund_name: str, visited=set()) -> (Decimal, d
     if fund_name in visited:  # Check for loops in data graph
         raise DataError(f"Data is looped. Fund {fund_name} is both parent and child.")
     fund = funds[fund_name]
-    weights = defaultdict(Decimal)
+    weights = defaultdict(dict)
     if len(fund.values) > 0:  # fund has sub-funds
         visited.add(fund_name)  # Count for loop check
         fund_value = sum(fund.values.values())  # Underlying value of fund
@@ -92,20 +92,24 @@ def calculate_weights(funds: dict, fund_name: str, visited=set()) -> (Decimal, d
             # RECURSION
             sub_value, sub_weights = calculate_weights(funds, key, visited)
             logging.debug(f"Calc weights of {key} in {fund_name} returned {sub_value}:{sub_weights}")
-            if len(sub_weights) == 0:  # Base fund.
+            if not sub_weights:  # Base fund.
                 logging.debug(f"Fund {key} is base fund")
-                weights[key] = value / fund_value  # Adding its weight to dict
-                logging.debug(f"Weight of fund {key} in fund {fund_name} is {weights[key]}")
+                weights[fund_name][key] = value / fund_value  # Adding its weight to dict
+                logging.debug(f"Weight of fund {key} in fund {fund_name} is {weights[fund_name][key]}")
             else:  # sub-fund has children
                 for wsf_name, wsf_weight in sub_weights.items():  # Cycle through sub-funds weights returned
                     # Normalize weights to the context of current fund
-                    normalized_wsf_weight = wsf_weight * (value / fund_value)
-                    logging.debug(f"Weight of fund {wsf_name} in fund {fund_name} through {key} is {normalized_wsf_weight}")
-                    weights[wsf_name] = weights[wsf_name] + normalized_wsf_weight
+                    for k, v in wsf_weight.items():
+                        normalized_wsf_weight = v * (value / fund_value)
+                        weights[fund_name][k] = normalized_wsf_weight
+                    logging.debug(f"Weight of fund {wsf_name} in fund {fund_name}"
+                                  f"through {key} is {normalized_wsf_weight}")
+                    # weights[fund_name][key] = value / fund_value  # Adding its weight to dict
+                    weights.update(sub_weights)  # Adding its weight to dict
         visited.remove(fund_name)  # Only check for loops inside the path
         return fund_value, weights
     else:
-        return Decimal(0), defaultdict(Decimal)  # Base fund
+        return Decimal(0), None  # Base fund
 
 
 def print_results(root_fund_name, weights, value, total_returns=None, weighted_returns=None):
@@ -120,10 +124,18 @@ def print_results(root_fund_name, weights, value, total_returns=None, weighted_r
     """
     if weighted_returns:
         for base_fund, weight in weights.items():
-            print(f"{root_fund_name},{base_fund},{weight:.3F},{weighted_returns[base_fund]:.3F}")
+            if type(weight) == dict:
+                for k, v in weight.items():
+                    print(f"{base_fund},{k},{v:.3F},{weighted_returns[base_fund][k]:.3F}")
+            else:
+                print(f"{root_fund_name},{base_fund},{weight:.3F},{weighted_returns[base_fund]:.3F}")
     else:
         for base_fund, weight in weights.items():
-            print(f"{root_fund_name},{base_fund},{weight:.3F}")
+            if type(weight) == dict:
+                for k, v in weight.items():
+                    print(f"{base_fund},{k},{v:.3F}")
+            else:
+                print(f"{root_fund_name},{base_fund},{weight:.3F}")
 
 
 def main(args, loglevel):
@@ -151,7 +163,7 @@ def main(args, loglevel):
 
         if len(funds_list[0]) == 4:  # We have end market values data
             # Split funds_list into returns_list and funds_list
-            returns_list = [[i[0], i[1], float(i[3])-float(i[2])] for i in funds_list]
+            returns_list = [[i[0], i[1], float(i[3]) - float(i[2])] for i in funds_list]
             funds_list = [[i[0], i[1], i[2]] for i in funds_list]
             returns, _ = read_data_from_list(returns_list)
 
@@ -185,9 +197,9 @@ def main(args, loglevel):
                 # Calculating returns weights in root fund
                 total_returns, returns_weights = calculate_weights(returns, node)
                 # Calculating weighted returns
-                weighted_returns = {key: (total_returns * val * weights[key]) for (key, val) in returns_weights.items()}
+                # weighted_returns = {key: (total_returns * val * weights[key]) for (key, val) in returns_weights.items()}
 
-                print_results(node, weights, value, total_returns, weighted_returns)
+                print_results(node, weights, value, total_returns, returns_weights)
             else:
                 print_results(node, weights, value)
         except DataError as err:
