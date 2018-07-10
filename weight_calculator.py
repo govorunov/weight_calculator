@@ -105,7 +105,7 @@ def calculate_weights(funds: dict, fund_name: str, visited=set()) -> (Decimal, d
                     logging.debug(f"Weight of fund {wsf_name} in fund {fund_name}"
                                   f"through {key} is {normalized_wsf_weight}")
                     # weights[fund_name][key] = value / fund_value  # Adding its weight to dict
-                    weights.update(sub_weights)  # Adding its weight to dict
+                weights.update(sub_weights)  # Adding its weight to dict
         visited.remove(fund_name)  # Only check for loops inside the path
         return fund_value, weights
     else:
